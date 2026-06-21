@@ -29,59 +29,11 @@ connector_github_pages/
 │  ├─ js/app.js
 │  ├─ js/pwa.js
 │  └─ icons/
-└─ docs/
-   ├─ GITHUB_PAGES.md
-   ├─ PROJECT_STRUCTURE.md
-   └─ AI_JSON_STRUCTURE_GUIDE.md
 ```
+## Licença / License
 
-## Run locally / Rodar localmente
+Copyright (c) 2026 d2rk444. Todos os direitos reservados / All rights reserved.
 
-Open `index.html` in the browser, or run a simple static server:
+**PT-BR:** Este projeto é protegido por direitos autorais. É permitido o uso pessoal ou comercial da ferramenta. No entanto, é **estritamente proibida** a redistribuição, sublicenciamento, espelhamento do código ou venda do software e de seus derivados sem autorização prévia por escrito. Consulte o arquivo `LICENSE` para ler os termos completos.
 
-```bash
-python -m http.server 8000
-```
-
-Then open `http://localhost:8000`.
-
-## Publish on GitHub Pages / Publicar no GitHub Pages
-
-1. Create a GitHub repository.
-2. Upload all files with `index.html` at the repository root.
-3. Go to **Settings > Pages**.
-4. Select **Deploy from a branch**.
-5. Choose `main` and `/root`.
-6. Save and wait for GitHub to publish the site.
-
-More details are in [`docs/GITHUB_PAGES.md`](docs/GITHUB_PAGES.md).
-
-## JSON import/export / Importação e exportação JSON
-
-Use **Settings > Backup** to export or import JSON.
-
-Import modes:
-
-- **Merge with current workspace**: keeps current work and adds compatible imported data.
-- **Replace current workspace**: replaces the current workspace with the imported JSON.
-
-The AI guide for generating valid JSON is available in [`docs/AI_JSON_STRUCTURE_GUIDE.md`](docs/AI_JSON_STRUCTURE_GUIDE.md).
-
-## Graph groups / Conjuntos do grafo
-
-Folder group circles are optional. They are disabled by default to preserve the classic clean graph layout.
-
-To enable them, open **Settings > Graph display > Show folder groups**.
-
-Os círculos/conjuntos de pastas são opcionais. Eles vêm desligados por padrão para manter o visual clássico do grafo.
-
-## Notes for maintainers / Notas para manutenção
-
-- `assets/js/app.js` contains the main application logic.
-- `assets/css/styles.css` contains the interface and responsive layout.
-- `sw.js` provides basic PWA caching.
-- Connector is local-first; no external database is required.
-
-## License / Licença
-
-MIT License.
+**EN:** This project is protected by copyright. Personal or commercial use of the tool is allowed. However, redistribution, sublicensing, mirroring of the code, or sale of the software and its derivatives is **strictly prohibited** without prior written authorization. See the `LICENSE` file for full terms.
