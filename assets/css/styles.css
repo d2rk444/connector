@@ -1,0 +1,1491 @@
+/* ── Design tokens ───────────────────────────────────────────────────── */
+:root {
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Arial, sans-serif;
+  --rail: 54px;
+  --sidebar: 300px;
+  --editor: 580px;
+  --purple: #a78bfa;
+  --purple-2: #7c3aed;
+  --cyan: #22d3ee;
+  --green: #4ade80;
+  --yellow: #facc15;
+  --red: #fb7185;
+  --radius: 8px;
+  --shadow: 0 18px 50px rgba(0,0,0,.46);
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────────── */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-primary:    #0b0b0d;
+  --bg-secondary:  #121216;
+  --bg-tertiary:   #18181d;
+  --bg-hover:      #23232a;
+  --bg-active:     #2d2442;
+  --bg-input:      #0e0e12;
+  --bg-popover:    #1b1b20;
+  --text-normal:   #e7e7ec;
+  --text-muted:    #a2a2ad;
+  --text-faint:    #6d6d79;
+  --border:        #292932;
+  --border-muted:  rgba(255,255,255,.075);
+  --accent:        var(--purple);
+  --accent-weak:   rgba(167,139,250,.16);
+  --graph-line:    rgba(220,220,230,.48);
+  --graph-line-hi: rgba(167,139,250,.96);
+  --graph-label:   #cfcfd6;
+  --graph-shadow:  rgba(0,0,0,.72);
+}
+
+/* ── Light theme ─────────────────────────────────────────────────────── */
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f6f6f7;
+  --bg-tertiary:   #ececef;
+  --bg-hover:      #e5e5ea;
+  --bg-active:     #eee8ff;
+  --bg-input:      #ffffff;
+  --bg-popover:    #ffffff;
+  --text-normal:   #1f1f24;
+  --text-muted:    #60606d;
+  --text-faint:    #8c8c98;
+  --border:        #d9d9e0;
+  --border-muted:  rgba(0,0,0,.08);
+  --accent:        #7c3aed;
+  --accent-weak:   rgba(124,58,237,.12);
+  --graph-line:    rgba(35,35,45,.42);
+  --graph-line-hi: rgba(124,58,237,.96);
+  --graph-label:   #3a3a48;
+  --graph-shadow:  rgba(255,255,255,.68);
+}
+
+/* ── Reset / base ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body {
+  height: 100%; margin: 0; overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-normal);
+  font-family: var(--font);
+  font-size: 14px;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button {
+  border: 0; background: transparent;
+  color: var(--text-muted); cursor: pointer;
+}
+button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible,
+.root-drop:focus-visible, .canvas-wrap:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+input, select, textarea {
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-normal);
+  border-radius: var(--radius);
+  outline: none;
+}
+select, option, optgroup {
+  background: var(--bg-popover) !important;
+  color: var(--text-normal) !important;
+}
+html[data-theme="dark"] select,
+html[data-theme="dark"] option,
+html[data-theme="dark"] optgroup {
+  color-scheme: dark;
+  background-color: #1b1b20 !important;
+  color: #e7e7ec !important;
+}
+html[data-theme="light"] select,
+html[data-theme="light"] option,
+html[data-theme="light"] optgroup {
+  color-scheme: light;
+  background-color: #ffffff !important;
+  color: #1f1f24 !important;
+}
+select { appearance: auto; min-width: 0; }
+::placeholder { color: var(--text-faint); }
+
+/* ── App shell ───────────────────────────────────────────────────────── */
+.app {
+  height: 100vh;
+  display: grid;
+  grid-template-columns: var(--rail) var(--sidebar) minmax(360px,var(--editor)) minmax(360px,1fr);
+  grid-template-rows: 1fr;
+  background: var(--bg-primary);
+}
+.app.sidebar-collapsed { grid-template-columns: var(--rail) 0 minmax(360px,var(--editor)) minmax(360px,1fr); }
+.app.editor-collapsed  { grid-template-columns: var(--rail) var(--sidebar) 0 minmax(520px,1fr); }
+.app.sidebar-collapsed.editor-collapsed { grid-template-columns: var(--rail) 0 0 1fr; }
+.app.focus-graph { grid-template-columns: var(--rail) 0 0 1fr; }
+.app.sidebar-collapsed .sidebar,
+.app.editor-collapsed  .editor,
+.app.focus-graph .sidebar,
+.app.focus-graph .editor { display: none; }
+
+/* ── Rail ────────────────────────────────────────────────────────────── */
+.rail {
+  border-right: 1px solid var(--border);
+  background: var(--bg-secondary);
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  padding: 10px 6px; min-width: 0;
+  width: 54px;
+}
+.rail-spacer { flex: 1; }
+.rail-btn, .icon-btn {
+  display: grid; place-items: center;
+  border-radius: 7px; color: var(--text-muted);
+  transition: .14s background, .14s color, .14s transform;
+}
+.rail-btn { width: 32px; height: 32px; }
+.icon-btn { width: 30px; height: 30px; }
+.rail-btn:hover, .icon-btn:hover {
+  background: var(--bg-hover); color: var(--text-normal);
+}
+.rail-btn.is-active, .icon-btn.is-active {
+  background: var(--bg-active); color: var(--accent);
+}
+.rail-btn svg, .icon-btn svg,
+.head-icon, .pill-select svg {
+  width: 18px; height: 18px; fill: none;
+  stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.head-icon { width: 19px; height: 19px; color: var(--text-normal); flex: 0 0 auto; }
+.pane { min-width: 0; min-height: 0; border-right: 1px solid var(--border); background: var(--bg-primary); }
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.sidebar { grid-column: 2; display: flex; flex-direction: column; background: var(--bg-primary); }
+.pane-head {
+  height: 48px; flex: 0 0 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 12px; gap: 10px;
+}
+.clean-head { background: var(--bg-primary); }
+.head-title { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 650; }
+.plain-title {
+  font-weight: 700; color: var(--text-normal);
+  padding: 4px 0; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.head-actions { display: flex; align-items: center; gap: 4px; }
+
+.new-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) repeat(4,32px);
+  gap: 6px; padding: 10px; border-bottom: 1px solid var(--border-muted);
+  align-items: center;
+}
+.new-row input { height: 36px; padding: 0 12px; min-width: 0; }
+.new-row .icon-btn { width: 32px; height: 32px; }
+.search-row { padding: 10px; border-bottom: 1px solid var(--border-muted); }
+.search-row input { width: 100%; height: 36px; padding: 0 12px; }
+.tree-wrap { overflow: auto; min-height: 0; flex: 1; padding: 8px 8px 22px; }
+.root-drop {
+  min-height: 100%; border-radius: 10px;
+}
+.root-drop.drag-over {
+  outline: 1px dashed var(--accent); outline-offset: -4px;
+  background: var(--accent-weak);
+}
+.tree { display: flex; flex-direction: column; gap: 2px; }
+.folder-row, .item-row, .category-row {
+  height: 32px; border-radius: 7px;
+  display: grid; align-items: center;
+  color: var(--text-muted); gap: 6px;
+  user-select: none;
+}
+.folder-row { grid-template-columns: 20px 20px minmax(0,1fr) auto 28px; }
+.item-row   { grid-template-columns: 20px 20px minmax(0,1fr); }
+.category-row { grid-template-columns: 14px minmax(0,1fr); }
+.folder-row:hover, .item-row:hover, .category-row:hover {
+  background: var(--bg-hover); color: var(--text-normal);
+}
+.folder-row.is-selected, .item-row.is-selected {
+  background: var(--bg-active); color: var(--accent);
+}
+.folder-row.drag-over {
+  background: var(--accent-weak); outline: 1px dashed var(--accent);
+}
+.folder-row .count { font-size: 12px; color: var(--text-faint); padding-right: 4px; }
+.folder-row .chev  { font-size: 13px; text-align: center; }
+.folder-row svg, .item-row svg {
+  width: 17px; height: 17px; fill: none;
+  stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.row-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inline-rename {
+  height: 26px; width: 100%; min-width: 0;
+  border: 1px solid var(--accent); border-radius: 6px;
+  background: var(--bg-input); color: var(--text-normal);
+  padding: 0 7px; box-shadow: 0 0 0 2px var(--accent-weak);
+}
+.row-rename, .row-delete { opacity: .56; }
+.folder-row:hover .row-rename,
+folder-row:hover .row-delete,
+.item-row:hover   .row-delete,
+.category-row:hover .row-delete,
+.folder-row.is-selected .row-rename,
+.folder-row.is-selected .row-delete,
+.item-row.is-selected   .row-delete { opacity: 1; }
+.tree-children { display: flex; flex-direction: column; gap: 2px; }
+.dot {
+  display: inline-block; width: 9px; height: 9px;
+  border-radius: 999px; background: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bg-primary), transparent 70%);
+  flex-shrink: 0;
+}
+.section-label {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-faint);
+  padding: 16px 8px 6px;
+  border-top: 1px solid var(--border-muted); margin-top: 12px;
+}
+.category-list { padding: 0 4px 20px; }
+.category-row { padding: 0 4px; }
+.tree .tree-section-label { margin-top: 2px; border-top: 0; padding: 8px 8px 6px; }
+.empty-tree { color: var(--text-faint); font-size: 13px; padding: 12px 8px; }
+
+/* ── Editor ──────────────────────────────────────────────────────────── */
+.editor { grid-column: 3; display: flex; flex-direction: column; min-width: 0; }
+.note-shell { min-height: 0; overflow: auto; padding: 42px min(7vw,60px) 80px; }
+.crumb { color: var(--text-muted); font-size: 13px; margin-bottom: 18px; }
+.title-input {
+  width: 100%; border: 0; background: transparent;
+  color: var(--text-normal); font-size: 36px; font-weight: 800;
+  line-height: 1.12; border-radius: 0; padding: 0;
+  margin: 0 0 16px; letter-spacing: -.03em;
+}
+.title-input:focus-visible { outline: none; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.pill-select {
+  height: 36px; display: inline-flex;
+  align-items: center; gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  border-radius: 999px; padding: 0 10px;
+  color: var(--text-normal);
+}
+.pill-select select { border: 0; background: transparent; max-width: 190px; padding: 0; color: var(--text-normal); }
+.pill-select select:focus-visible { outline: none; }
+.body-input {
+  width: 100%; min-height: 300px; resize: vertical;
+  border: 0; background: transparent; color: var(--text-normal);
+  line-height: 1.65; font-size: 19px; padding: 0;
+}
+.body-input:focus-visible { outline: none; }
+.task-row {
+  margin-top: 18px; padding: 12px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-secondary);
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+}
+.task-row label { display: flex; gap: 8px; align-items: center; color: var(--text-muted); }
+.task-row select, .task-row input[type="date"] { height: 32px; padding: 0 8px; }
+.check input { accent-color: var(--accent); }
+
+/* ── Graph pane ──────────────────────────────────────────────────────── */
+.graph-pane {
+  grid-column: 4; display: flex; flex-direction: column;
+  background: var(--bg-primary); position: relative;
+}
+.graph-toolbar {
+  height: 48px; flex: 0 0 48px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: flex-end; gap: 8px; padding: 0 18px;
+}
+
+.graph-filter-popover[hidden] { display: none !important; }
+.graph-filter-popover {
+  position: absolute; top: 56px; right: 14px; z-index: 18;
+  width: min(300px, calc(100% - 28px));
+  background: color-mix(in srgb, var(--bg-popover), transparent 2%);
+  border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow); color: var(--text-normal);
+  padding: 10px;
+}
+.graph-filter-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 0 0 8px; border-bottom: 1px solid var(--border-muted);
+}
+.graph-filter-field { display: grid; gap: 6px; margin-top: 10px; color: var(--text-muted); font-size: 12px; }
+.graph-filter-field select { height: 34px; padding: 0 10px; width: 100%; }
+.graph-filter-help { margin: 8px 0 0; color: var(--text-faint); font-size: 12px; line-height: 1.35; }
+.graph-filter-popover { width: min(248px, calc(100% - 28px)); }
+.graph-filter-chips {
+  display: grid; grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 7px; margin-top: 10px;
+}
+.graph-filter-chip {
+  height: 32px; border: 1px solid var(--border);
+  background: var(--bg-tertiary); color: var(--text-muted);
+  border-radius: 9px; padding: 0 8px; font-size: 12px;
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.graph-filter-chip:hover { border-color: var(--accent); color: var(--text-normal); }
+.graph-filter-chip.is-active { background: var(--bg-active); color: var(--accent); border-color: color-mix(in srgb, var(--accent), transparent 35%); }
+.tree-wrap { contain: content; }
+.row-rename { opacity: .2; }
+.folder-row:hover .row-rename, .folder-row.is-selected .row-rename, .folder-row:focus-within .row-rename { opacity: 1; }
+.graph-info-body table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.graph-info-body td { border-bottom: 1px solid var(--border-muted); padding: 6px 4px; word-break: break-word; overflow-wrap: anywhere; }
+.graph-info-body td:first-child { color: var(--text-faint); width: 44%; }
+.graph-info-panel[hidden] { display: none !important; }
+.graph-info-panel {
+  position: absolute; top: 12px; right: 12px;
+  width: min(380px, calc(100% - 24px)); max-height: min(560px, calc(100% - 24px));
+  overflow: auto; z-index: 12;
+  background: color-mix(in srgb, var(--bg-popover), transparent 2%);
+  border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: var(--shadow); color: var(--text-normal);
+}
+.graph-info-head {
+  height: 44px; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--border-muted);
+  font-weight: 700;
+}
+.graph-info-body { padding: 12px; font-size: 13px; line-height: 1.45; color: var(--text-muted); }
+.graph-info-body h4 { margin: 12px 0 6px; color: var(--text-normal); font-size: 13px; }
+.graph-info-body table { width: 100%; border-collapse: collapse; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.graph-info-body td { border-bottom: 1px solid var(--border-muted); padding: 6px 4px; vertical-align: top; word-break: break-word; }
+.graph-info-body td:first-child { width: 44%; color: var(--text-muted); }
+.graph-info-body td:last-child { text-align: left; color: var(--text-normal); }
+.graph-info-body .mini-list { margin: 6px 0 0; padding-left: 18px; }
+.graph-info-body .mini-list li { margin: 3px 0; }
+.canvas-wrap {
+  position: relative; flex: 1; min-height: 0; overflow: hidden;
+  background: radial-gradient(ellipse at center,
+    color-mix(in srgb, var(--accent), transparent 96%) 0%,
+    transparent 58%), var(--bg-primary);
+}
+#graphCanvas { display: block; width: 100%; height: 100%; }
+
+
+.canvas-wrap.is-paused { cursor: default; }
+.canvas-wrap.is-paused::after {
+  content: attr(data-mode-label);
+  position: absolute; top: 14px; right: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-secondary), transparent 3%);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.22);
+  pointer-events: none;
+}
+
+/* ── Stats bar ───────────────────────────────────────────────────────── */
+.stats {
+  position: absolute; bottom: 18px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 8px; pointer-events: none;
+}
+.stats span {
+  background: color-mix(in srgb, var(--bg-secondary), transparent 4%);
+  border: 1px solid var(--border);
+  border-radius: 999px; color: var(--text-faint);
+  font-size: 12px; padding: 5px 12px;
+}
+
+/* ── Commands overlay ────────────────────────────────────────────────── */
+.commands {
+  position: absolute; left: 16px; bottom: 20px;
+  max-width: min(520px, calc(100% - 32px));
+  background: color-mix(in srgb, var(--bg-secondary), transparent 5%);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; color: var(--text-muted);
+  font-size: 13px; line-height: 1.55;
+  box-shadow: var(--shadow); pointer-events: none;
+}
+.commands[hidden] { display: none; }
+
+/* ── Settings modal ──────────────────────────────────────────────────── */
+.modal-backdrop[hidden], .settings-modal[hidden] { display: none !important; }
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 20;
+}
+.settings-modal {
+  position: fixed; right: 18px; top: 72px;
+  width: min(420px, calc(100vw - 36px));
+  max-height: calc(100vh - 92px);
+  display: flex; flex-direction: column;
+  background: var(--bg-popover); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: var(--shadow);
+  z-index: 21; color: var(--text-normal);
+}
+.modal-head {
+  height: 54px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+  padding: 0 16px; border-bottom: 1px solid var(--border);
+}
+.modal-head h2 { font-size: 18px; margin: 0; }
+.modal-body { overflow: auto; padding: 16px; }
+.setting-section {
+  border-bottom: 1px solid var(--border-muted);
+  padding-bottom: 16px; margin-bottom: 16px;
+}
+.setting-section:last-child { border-bottom: 0; margin-bottom: 0; }
+.setting-section h3 {
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-faint);
+  margin: 0 0 12px;
+}
+.setting-help { margin: 8px 0 0; color: var(--text-faint); font-size: 12px; line-height: 1.45; }
+.smart-action {
+  height: 36px; border: 1px solid var(--border);
+  background: var(--bg-tertiary); border-radius: 8px;
+  padding: 0 12px; color: var(--text-normal);
+  width: 100%; text-align: center;
+}
+.smart-action:hover { border-color: var(--accent); }
+.field { display: grid; gap: 6px; margin-bottom: 12px; color: var(--text-muted); }
+.field input, .field select { height: 36px; padding: 0 10px; }
+.switch { display: flex; gap: 10px; align-items: center; color: var(--text-muted); margin: 10px 0; }
+.switch input { accent-color: var(--accent); }
+.category-create { display: grid; grid-template-columns: minmax(0,1fr) 42px auto; gap: 8px; }
+.category-create input[type="text"]  { height: 36px; padding: 0 10px; }
+.category-create input[type="color"] { height: 36px; width: 42px; padding: 2px; }
+.category-create button,
+.button-grid button,
+.danger-zone button {
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  border-radius: 8px; padding: 0 12px; color: var(--text-normal);
+}
+.category-create button:hover,
+.button-grid button:hover,
+.danger-zone button:hover { border-color: var(--accent); }
+.settings-category-list { display: grid; gap: 6px; margin-top: 12px; }
+.settings-cat-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0,1fr) 30px;
+  align-items: center; gap: 8px;
+  border: 1px solid var(--border-muted);
+  border-radius: 8px; padding: 6px 8px;
+}
+.button-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.button-grid button { height: 36px; }
+.file-input { display: none; }
+.danger-zone button { height: 36px; color: var(--red); }
+
+/* ── Physics slider row ──────────────────────────────────────────────── */
+.slider-row {
+  display: grid; grid-template-columns: 1fr 48px;
+  gap: 8px; align-items: center; margin-bottom: 10px;
+  color: var(--text-muted); font-size: 13px;
+}
+.slider-row label { display: flex; flex-direction: column; gap: 4px; }
+.slider-row input[type=range] {
+  width: 100%; height: 4px; accent-color: var(--accent);
+  border: none; background: transparent; padding: 0;
+}
+.slider-val {
+  font-size: 12px; text-align: right;
+  color: var(--text-faint); font-variant-numeric: tabular-nums;
+}
+
+/* ── Toast ───────────────────────────────────────────────────────────── */
+.toast[hidden], .toast:empty { display: none !important; }
+.toast {
+  position: fixed; left: 50%; bottom: 22px;
+  transform: translateX(-50%); z-index: 40;
+  background: var(--bg-popover); border: 1px solid var(--border);
+  color: var(--text-normal); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 10px 12px;
+  display: flex; gap: 12px; align-items: center;
+  pointer-events: none; opacity: .96;
+}
+.toast button  { color: var(--accent); font-weight: 650; pointer-events: auto; }
+.toast.muted   { background: transparent; border-color: transparent; box-shadow: none; color: var(--text-faint); padding: 0; }
+.dragging      { opacity: .45; }
+.visually-hidden {
+  position: absolute !important; width: 1px !important; height: 1px !important;
+  padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+  clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  :root { --sidebar: 270px; --editor: 460px; }
+  .note-shell { padding-left: 34px; padding-right: 34px; }
+  .title-input { font-size: 32px; }
+}
+@media (max-width: 820px) {
+  .app, .app.sidebar-collapsed, .app.editor-collapsed,
+  .app.sidebar-collapsed.editor-collapsed {
+    grid-template-columns: var(--rail) 1fr;
+    grid-template-rows: minmax(180px,.45fr) minmax(260px,1fr);
+  }
+  .sidebar { display: none; }
+  .editor { grid-column: 2; grid-row: 1; }
+  .graph-pane { grid-column: 2; grid-row: 2; }
+  .app.focus-graph { grid-template-columns: var(--rail) 1fr; grid-template-rows: 1fr; }
+  .app.focus-graph .graph-pane { grid-column: 2; grid-row: 1; }
+  .note-shell { padding: 22px; }
+  .title-input { font-size: 27px; }
+  .commands { display: none; }
+  .stats { left: auto; right: 12px; transform: none; }
+  .button-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+  .rail-btn, .icon-btn { transition: none !important; }
+}
+
+/* ── Hidden elements (kept in DOM for backward compat) ───────────────── */
+#btnAddLinked,
+#btnSettings,
+#btnSettingsRail,
+#btnSmartLinks,
+#btnSmartLinksSettings,
+#toastUndo { display: none; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UX polish for GitHub Pages structured build
+   - keeps original behavior, improves discoverability, mobile access and spacing
+═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --rail: 58px;
+  --sidebar: clamp(276px, 22vw, 344px);
+  --editor: clamp(460px, 34vw, 660px);
+  --radius: 12px;
+  --radius-sm: 9px;
+  --shadow-soft: 0 12px 36px rgba(0,0,0,.28);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #090a0f;
+  --bg-secondary: #101119;
+  --bg-tertiary: #171824;
+  --bg-hover: #232538;
+  --bg-active: rgba(167,139,250,.18);
+  --bg-input: #0d0e15;
+  --border: rgba(255,255,255,.105);
+  --border-muted: rgba(255,255,255,.065);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+noscript {
+  position: fixed;
+  inset: 16px 16px auto 16px;
+  z-index: 999;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-popover);
+  color: var(--text-normal);
+}
+
+.app {
+  background:
+    radial-gradient(circle at 16% 12%, color-mix(in srgb, var(--accent), transparent 88%), transparent 28%),
+    radial-gradient(circle at 78% 4%, rgba(34, 211, 238, .08), transparent 26%),
+    var(--bg-primary);
+}
+
+.rail {
+  width: var(--rail);
+  padding: 12px 8px;
+  background: color-mix(in srgb, var(--bg-secondary), transparent 3%);
+  box-shadow: inset -1px 0 0 var(--border-muted);
+}
+
+.rail-btn, .icon-btn {
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+}
+
+.rail-btn:hover, .icon-btn:hover,
+.rail-btn:focus-visible, .icon-btn:focus-visible {
+  transform: translateY(-1px);
+}
+
+
+.pane {
+  background: color-mix(in srgb, var(--bg-primary), transparent 1%);
+  border-right-color: var(--border-muted);
+}
+
+.pane-head, .graph-toolbar {
+  min-height: 52px;
+  height: 52px;
+  background: color-mix(in srgb, var(--bg-primary), transparent 3%);
+  backdrop-filter: blur(12px);
+}
+
+.head-title, .toolbar-context strong { letter-spacing: -.01em; }
+
+.plain-title {
+  border-radius: var(--radius-sm);
+  padding-inline: 8px;
+}
+
+.new-row, .search-row { padding-inline: 12px; }
+.new-row input, .search-row input, .field input, .field select {
+  border-radius: 11px;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.new-row input:focus, .search-row input:focus, .field input:focus, .field select:focus {
+  border-color: color-mix(in srgb, var(--accent), transparent 32%);
+  box-shadow: 0 0 0 4px var(--accent-weak);
+}
+
+.folder-row, .item-row, .category-row {
+  min-height: 34px;
+  padding-inline: 4px;
+}
+
+.folder-row:hover .row-rename,
+.folder-row:hover .row-delete,
+.item-row:hover .row-delete,
+.category-row:hover .row-delete,
+.folder-row.is-selected .row-rename,
+.folder-row.is-selected .row-delete,
+.item-row.is-selected .row-delete { opacity: 1; }
+
+.tree-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent), transparent 60%) transparent;
+}
+
+.note-shell {
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-muted);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-secondary), transparent 35%);
+}
+
+.title-input { font-size: clamp(28px, 3.2vw, 44px); }
+.body-input { font-size: clamp(16px, 1.25vw, 19px); }
+
+.pill-select {
+  min-height: 38px;
+  background: color-mix(in srgb, var(--bg-secondary), transparent 30%);
+  border-color: var(--border-muted);
+}
+
+.graph-toolbar {
+  justify-content: space-between;
+  padding-inline: 16px;
+  gap: 12px;
+}
+
+.toolbar-context {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.05;
+  margin-right: auto;
+}
+
+.toolbar-context span {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.toolbar-context strong {
+  font-size: 14px;
+  color: var(--text-normal);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.canvas-wrap {
+  background:
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--accent), transparent 91%) 0%, transparent 34%),
+    radial-gradient(circle at 22% 20%, rgba(34,211,238,.07), transparent 24%),
+    linear-gradient(180deg, transparent, rgba(0,0,0,.045)),
+    var(--bg-primary);
+}
+
+.stats {
+  bottom: 20px;
+  gap: 10px;
+}
+
+.stats span, .commands, .graph-filter-popover, .graph-info-panel, .settings-modal, .toast {
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-soft);
+}
+
+.commands {
+  border-radius: 14px;
+  max-width: min(600px, calc(100% - 32px));
+}
+
+.settings-modal {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.button-grid button, .smart-action, .category-create button, .danger-zone button {
+  min-height: 38px;
+  border-radius: 11px;
+}
+
+@media (min-width: 1280px) {
+  .graph-toolbar { padding-inline: 20px; }
+  .note-shell { padding-top: 56px; }
+}
+
+@media (max-width: 980px) {
+  :root { --sidebar: min(340px, 86vw); --editor: 1fr; }
+  .app, .app.sidebar-collapsed, .app.editor-collapsed,
+  .app.sidebar-collapsed.editor-collapsed {
+    grid-template-columns: var(--rail) minmax(0,1fr);
+    grid-template-rows: minmax(220px, 43dvh) minmax(280px, 1fr);
+  }
+  .sidebar {
+    position: fixed;
+    left: var(--rail);
+    top: 0;
+    bottom: 0;
+    z-index: 30;
+    width: var(--sidebar);
+    max-width: calc(100vw - var(--rail));
+    display: flex !important;
+    box-shadow: 18px 0 42px rgba(0,0,0,.35);
+    transform: translateX(0);
+    transition: transform .2s ease;
+  }
+  .app.sidebar-collapsed .sidebar,
+  .app.focus-graph .sidebar { transform: translateX(calc(-100% - var(--rail))); }
+  .editor { grid-column: 2; grid-row: 1; }
+  .graph-pane { grid-column: 2; grid-row: 2; }
+  .app.focus-graph { grid-template-columns: var(--rail) minmax(0,1fr); grid-template-rows: 1fr; }
+  .app.focus-graph .graph-pane { grid-column: 2; grid-row: 1; }
+  .note-shell { padding: 24px; }
+  .toolbar-context { display: none; }
+  .graph-toolbar { overflow-x: auto; justify-content: flex-end; }
+  .toolbar-actions { min-width: max-content; }
+  .commands { display: none !important; }
+}
+
+@media (max-width: 620px) {
+  :root { --rail: 52px; }
+  .rail { padding-inline: 6px; }
+  .rail-btn, .icon-btn { min-width: 32px; min-height: 32px; }
+  .app, .app.sidebar-collapsed, .app.editor-collapsed,
+  .app.sidebar-collapsed.editor-collapsed {
+    grid-template-rows: minmax(190px, 42dvh) minmax(260px, 1fr);
+  }
+  .title-input { font-size: 26px; }
+  .body-input { min-height: 200px; }
+  .stats {
+    left: 12px;
+    right: auto;
+    transform: none;
+    flex-wrap: wrap;
+  }
+  .stats span { padding: 5px 9px; }
+  .graph-filter-popover { right: 8px; width: calc(100% - 16px); }
+  .settings-modal { right: 8px; left: 8px; width: auto; top: 58px; }
+  .button-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .pane-head, .graph-toolbar, .commands, .settings-modal, .toast, .graph-info-panel, .graph-filter-popover {
+    background: var(--bg-popover);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Minimal UX pass v28
+   - removes redundant rail/settings buttons
+   - neutral dark/white themes
+   - stable graph-first interactions
+═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --rail: 52px;
+  --sidebar: clamp(280px, 22vw, 340px);
+  --editor: clamp(460px, 34vw, 640px);
+  --radius: 10px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 16px 44px rgba(0,0,0,.36);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #050505;
+  --bg-secondary: #0b0b0b;
+  --bg-tertiary: #111111;
+  --bg-hover: #1a1a1a;
+  --bg-active: rgba(255,255,255,.09);
+  --bg-input: #070707;
+  --bg-popover: #0d0d0d;
+  --text-normal: #f5f5f5;
+  --text-muted: #b8b8b8;
+  --text-faint: #777777;
+  --border: rgba(255,255,255,.12);
+  --border-muted: rgba(255,255,255,.075);
+  --accent: #ffffff;
+  --accent-weak: rgba(255,255,255,.10);
+  --graph-line: rgba(255,255,255,.34);
+  --graph-line-hi: rgba(255,255,255,.88);
+  --graph-label: #eeeeee;
+  --graph-shadow: rgba(0,0,0,.86);
+}
+
+html[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f8f8;
+  --bg-tertiary: #eeeeee;
+  --bg-hover: #eeeeee;
+  --bg-active: rgba(0,0,0,.075);
+  --bg-input: #ffffff;
+  --bg-popover: #ffffff;
+  --text-normal: #111111;
+  --text-muted: #555555;
+  --text-faint: #888888;
+  --border: rgba(0,0,0,.13);
+  --border-muted: rgba(0,0,0,.08);
+  --accent: #111111;
+  --accent-weak: rgba(0,0,0,.08);
+  --graph-line: rgba(0,0,0,.30);
+  --graph-line-hi: rgba(0,0,0,.78);
+  --graph-label: #111111;
+  --graph-shadow: rgba(255,255,255,.82);
+}
+
+.app,
+.canvas-wrap {
+  background: var(--bg-primary) !important;
+}
+
+.rail,
+.pane-head,
+.graph-toolbar {
+  background: var(--bg-secondary) !important;
+  backdrop-filter: none !important;
+}
+
+.rail {
+  width: var(--rail);
+  padding: 10px 7px;
+}
+
+#btnVault,
+#btnSettingsRail,
+#btnSettings,
+#btnAddLinked,
+#btnAddLinked2,
+.toolbar-context {
+  display: none !important;
+}
+
+.graph-toolbar {
+  justify-content: flex-end !important;
+  padding-inline: 14px;
+}
+
+.rail-btn,
+.icon-btn {
+  border-radius: 9px;
+  transition: background .12s ease, color .12s ease, opacity .12s ease;
+}
+
+.rail-btn:hover,
+.icon-btn:hover,
+.rail-btn:focus-visible,
+.icon-btn:focus-visible {
+  transform: none !important;
+}
+
+.rail-btn.is-active,
+.icon-btn.is-active,
+.folder-row.is-selected,
+.item-row.is-selected {
+  color: var(--text-normal) !important;
+  background: var(--bg-active) !important;
+}
+
+.folder-row,
+.item-row,
+.category-row {
+  border-radius: 9px;
+}
+
+.row-rename,
+.row-delete {
+  opacity: 0;
+}
+
+.folder-row:hover .row-rename,
+.folder-row:hover .row-delete,
+.item-row:hover .row-delete,
+.category-row:hover .row-delete,
+.folder-row:focus-within .row-rename,
+.folder-row:focus-within .row-delete,
+.item-row:focus-within .row-delete,
+.category-row:focus-within .row-delete {
+  opacity: .82;
+}
+
+.folder-row.is-selected .row-delete,
+.item-row.is-selected .row-delete {
+  opacity: .58;
+}
+
+.commands {
+  display: none !important;
+}
+
+.stats span,
+.commands,
+.graph-filter-popover,
+.graph-info-panel,
+.settings-modal,
+.toast {
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: none !important;
+}
+
+.new-row input:focus,
+.search-row input:focus,
+.field input:focus,
+.field select:focus,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.root-drop:focus-visible,
+.canvas-wrap:focus-visible {
+  box-shadow: none !important;
+  outline: 1px solid var(--accent) !important;
+  outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+  .sidebar { left: var(--rail); }
+  .app.sidebar-collapsed .sidebar,
+  .app.focus-graph .sidebar { transform: translateX(calc(-100% - var(--rail))); }
+}
+
+
+/* v30 kinetic graph: motion is on by default; pause is available as a deliberate tool. */
+.canvas-wrap { cursor: default; }
+.canvas-wrap:active { cursor: grab; }
+.canvas-wrap.is-paused::after {
+  display: block !important;
+  top: auto;
+  right: 14px;
+  bottom: 14px;
+  opacity: .82;
+}
+.item-row.is-selected .row-label,
+.folder-row.is-selected .row-label { font-weight: 650; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Minimal UX pass v30
+   - keeps manual pause control
+   - double-click links to the selected source inside the same folder
+   - blank canvas click clears selection/anchor and returns to global context
+═══════════════════════════════════════════════════════════════════════ */
+#btnPause { display: grid !important; }
+.rail-btn:active,
+.icon-btn:active { transform: none !important; }
+.rail-btn:not(.is-active),
+.icon-btn:not(.is-active) { background: transparent; }
+.item-row,
+.folder-row { opacity: 1 !important; }
+.row-delete,
+.row-rename { opacity: 0; }
+.item-row:hover .row-delete,
+.item-row:focus-within .row-delete,
+.folder-row:hover .row-delete,
+.folder-row:hover .row-rename,
+.folder-row:focus-within .row-delete,
+.folder-row:focus-within .row-rename { opacity: .78; }
+.graph-toolbar .icon-btn { opacity: .78; }
+.graph-toolbar .icon-btn:hover,
+.graph-toolbar .icon-btn.is-active { opacity: 1; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UX pass v31
+   - keeps vault/files visible by default
+   - makes folders/notes/tasks easier to scan
+   - fixes blank double-click linked-note flow
+═══════════════════════════════════════════════════════════════════════ */
+.vault-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid var(--border-muted);
+}
+.vault-summary span {
+  min-width: 0;
+  border: 1px solid var(--border-muted);
+  border-radius: 999px;
+  padding: 5px 7px;
+  color: var(--text-faint);
+  background: var(--bg-secondary);
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vault-summary b {
+  color: var(--text-normal);
+  font-variant-numeric: tabular-nums;
+}
+.sidebar {
+  min-width: min(100vw - var(--rail), var(--sidebar));
+}
+.tree-wrap {
+  padding-top: 10px;
+}
+.folder-row .count {
+  min-width: 20px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.item-row.is-selected,
+.folder-row.is-selected {
+  outline: 1px solid var(--border-muted);
+}
+.graph-toolbar .icon-btn[aria-pressed="true"],
+.graph-toolbar .icon-btn.is-active {
+  border: 1px solid var(--border-muted);
+}
+@media (min-width: 981px) {
+  .app:not(.focus-graph):not(.sidebar-collapsed) .sidebar {
+    display: flex !important;
+  }
+}
+@media (max-width: 980px) {
+  .vault-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UX pass v32
+   - resumo do workspace como painel claro e abrível
+   - filtros deixam de parecer travados e podem ser limpos rápido
+   - comandos completos em painel de ajuda
+   - remove botões duplicados do topo
+═══════════════════════════════════════════════════════════════════════ */
+#btnFocusGraph,
+#btnToggleEditor {
+  display: none !important;
+}
+
+.vault-summary-panel {
+  border-bottom: 1px solid var(--border-muted);
+  background: var(--bg-primary);
+}
+.vault-summary-panel summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.vault-summary-panel summary::-webkit-details-marker { display: none; }
+.vault-summary-panel summary::before {
+  content: '›';
+  color: var(--text-faint);
+  transform: rotate(0deg);
+  transition: transform .14s ease;
+}
+.vault-summary-panel[open] summary::before { transform: rotate(90deg); }
+.vault-summary-panel:not([open]) { padding-bottom: 8px; }
+.vault-summary-panel:not([open]) .vault-summary,
+.vault-summary-panel:not([open]) .vault-summary-hint { display: none; }
+.vault-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px 12px 8px;
+  border-bottom: 0;
+}
+.summary-card {
+  min-width: 0;
+  border: 1px solid var(--border-muted);
+  border-radius: 10px;
+  padding: 8px 7px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  text-align: left;
+  display: grid;
+  gap: 2px;
+}
+.summary-card:hover,
+.summary-card:focus-visible {
+  background: var(--bg-hover);
+  border-color: var(--border);
+  color: var(--text-normal);
+}
+.summary-card b {
+  color: var(--text-normal);
+  font-size: 18px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.summary-card span {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font-size: 11px;
+  color: currentColor;
+}
+.vault-summary-hint {
+  padding: 0 12px 10px;
+  color: var(--text-faint);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.graph-filter-reset {
+  width: 100%;
+  height: 34px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+}
+.graph-filter-reset:hover {
+  background: var(--bg-hover);
+  color: var(--text-normal);
+  border-color: var(--accent);
+}
+.graph-filter-popover {
+  right: 12px;
+  top: 54px;
+}
+.graph-filter-chip.is-active::after {
+  content: ' ✓';
+  color: var(--accent);
+}
+
+.commands {
+  max-width: min(560px, calc(100% - 32px));
+  max-height: min(380px, calc(100% - 72px));
+  overflow: auto;
+  pointer-events: auto;
+  padding: 13px 15px;
+}
+.commands b { color: var(--text-normal); }
+.commands ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+.commands li { margin: 5px 0; }
+#btnHelpCommands.is-active {
+  background: var(--bg-active);
+  color: var(--accent);
+}
+
+html[data-theme="dark"] {
+  --bg-primary: #050506;
+  --bg-secondary: #0d0d10;
+  --bg-tertiary: #15151a;
+  --bg-hover: #202028;
+  --bg-active: #272037;
+  --border: #25252d;
+  --border-muted: rgba(255,255,255,.07);
+}
+html[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f7f8;
+  --bg-tertiary: #eeeeF1;
+  --bg-hover: #e9e9ee;
+  --bg-active: #f0ebff;
+}
+
+@media (max-width: 820px) {
+  .commands {
+    display: block;
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100% - 20px);
+    max-height: 46%;
+    font-size: 12px;
+  }
+  .vault-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .summary-card { text-align: center; }
+  .summary-card span { text-align: center; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UX pass v33
+   - workspace button always restores files/folders/tasks
+   - filters are generated from actual content: types, categories and folders
+   - graph-only mode is deliberate and never the reload default
+═══════════════════════════════════════════════════════════════════════ */
+#btnEditorRail,
+#btnEditorRail[aria-label="Workspace"],
+#btnEditorRail[aria-label="Arquivos"] {
+  display: grid !important;
+}
+#btnFocusGraph,
+#btnAddLinked2,
+#btnToggleEditor {
+  display: none !important;
+}
+@media (min-width: 981px) {
+  .app:not(.focus-graph):not(.sidebar-collapsed):not(.editor-collapsed) {
+    grid-template-columns: var(--rail) var(--sidebar) minmax(360px,var(--editor)) minmax(360px,1fr) !important;
+  }
+  .app.editor-collapsed:not(.focus-graph):not(.sidebar-collapsed) {
+    grid-template-columns: var(--rail) var(--sidebar) 0 minmax(520px,1fr) !important;
+  }
+  .app:not(.focus-graph):not(.sidebar-collapsed) .sidebar {
+    display: flex !important;
+    grid-column: 2;
+  }
+}
+.graph-filter-popover {
+  width: min(360px, calc(100% - 28px));
+  max-height: min(70vh, 620px);
+  overflow: auto;
+}
+.graph-filter-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 2px 2px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.graph-filter-summary strong {
+  color: var(--text-normal);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-filter-chips {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+.graph-filter-section h4 {
+  margin: 0 0 7px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-faint);
+}
+.graph-filter-section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.graph-filter-chip {
+  width: 100%;
+  height: 34px;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.graph-filter-chip span:not(.dot) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-filter-chip b {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.graph-filter-chip.is-active b { color: currentColor; }
+.graph-filter-chip .dot {
+  width: 8px;
+  height: 8px;
+  box-shadow: none;
+}
+.commands:not([hidden]) {
+  display: block !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UX pass v34
+   - no native tooltip popups on icon buttons
+   - close note/editor button
+   - simplified settings and backup/export tools
+═══════════════════════════════════════════════════════════════════════ */
+button[title], .icon-btn[title], .rail-btn[title] { pointer-events: auto; }
+.close-editor-btn {
+  color: var(--text-muted);
+}
+.close-editor-btn:hover,
+.close-editor-btn:focus-visible {
+  color: var(--red);
+}
+.backup-tools {
+  display: grid;
+  gap: 12px;
+}
+.compact-field {
+  margin-bottom: 0;
+}
+.backup-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.backup-grid button {
+  min-height: 38px;
+  height: auto;
+  padding: 8px 10px;
+  line-height: 1.2;
+}
+.modal-body .setting-help {
+  line-height: 1.45;
+}
+.graph-toolbar .icon-btn,
+.rail-btn,
+.icon-btn {
+  min-width: 30px;
+  min-height: 30px;
+}
+@media (max-width: 820px) {
+  .backup-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Connector UI pass
+   - classic graph by default; folder/group halos are optional
+   - cleaner editor header without destructive icon
+   - simplified settings: appearance, graph display, physics and backup
+═══════════════════════════════════════════════════════════════════════ */
+.head-actions {
+  gap: 8px;
+}
+.editor .head-actions .icon-btn {
+  width: 34px;
+  height: 34px;
+}
+.settings-modal .switch {
+  min-height: 42px;
+  padding: 8px 0;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-muted);
+}
+.settings-modal .switch:last-of-type {
+  border-bottom: 0;
+}
+.settings-modal .switch input[type="checkbox"] {
+  appearance: none;
+  width: 44px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-tertiary);
+  position: relative;
+  flex: 0 0 44px;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease;
+}
+.settings-modal .switch input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 2px;
+  top: 2px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  transition: transform .16s ease, background .16s ease;
+}
+.settings-modal .switch input[type="checkbox"]:checked {
+  background: var(--accent-weak);
+  border-color: color-mix(in srgb, var(--accent), transparent 30%);
+}
+.settings-modal .switch input[type="checkbox"]:checked::after {
+  transform: translateX(20px);
+  background: var(--accent);
+}
+.settings-modal .switch input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.settings-modal .field select,
+.settings-modal .field input[type="text"],
+.settings-modal .smart-action,
+.backup-grid button,
+.danger-zone button {
+  min-height: 42px;
+}
+.settings-modal .category-create,
+.settings-modal .settings-category-list {
+  display: none !important;
+}
+.title-input {
+  resize: none;
+  overflow: hidden;
+  min-height: 58px;
+  max-height: 220px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+
+/* Connector cleanup: destructive row delete icons are intentionally hidden from the main workspace.
+   Use keyboard Delete on the selected object/link for advanced deletion. */
+.row-delete, #btnDeleteSelected { display: none !important; }
+
+
+/* Connector bugfix: closing the editor must not leave an invisible blank pane. */
+@media (min-width: 981px) {
+  .app.editor-collapsed:not(.focus-graph):not(.sidebar-collapsed) {
+    grid-template-columns: var(--rail) var(--sidebar) 0 minmax(520px, 1fr) !important;
+  }
+  .app.editor-collapsed:not(.focus-graph):not(.sidebar-collapsed) .editor {
+    display: none !important;
+  }
+  .app.editor-collapsed:not(.focus-graph):not(.sidebar-collapsed) .graph-pane {
+    grid-column: 4 !important;
+  }
+}
