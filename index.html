@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Connector</title>
+  <meta name="description" content="Connector é um workspace visual com notas, tarefas, pastas, categorias e grafo inteligente em app estático para GitHub Pages." />
+  <meta name="theme-color" content="#0b0b0d" />
+  <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  
+</head>
+<body>
+<noscript>Este projeto precisa de JavaScript ativado para renderizar o vault e o grafo.</noscript>
+<div id="app" class="app" aria-label="Connector workspace">
+
+  <!-- Rail -->
+  <aside class="rail" aria-label="Main navigation">
+    <button class="rail-btn is-active" id="btnEditorRail" type="button" aria-label="Workspace" data-i18n-title="workspace">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.8l1.9 2H18.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><path d="M7 11h10M7 15h7"/></svg>
+    </button>
+    <button class="rail-btn" id="btnGraphRail" type="button" aria-label="Graph" data-i18n-title="graph">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="5.5" r="2.2"/><circle cx="18" cy="18.5" r="2.2"/><path d="M8 11l8-4.5M8 13l8 4.5M18 7.7v8.6"/></svg>
+    </button>
+    <button class="rail-btn" id="btnSearch" type="button" aria-label="Search" data-i18n-title="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+    </button>
+    <div class="rail-spacer"></div>
+    <button class="rail-btn" id="btnThemeQuick" type="button" aria-label="Theme" data-i18n-title="theme">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+    </button>
+    <button class="rail-btn" id="btnMore" type="button" aria-label="More" data-i18n-title="more">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>
+    </button>
+  </aside>
+
+  <!-- Sidebar / Vault -->
+  <aside class="sidebar pane" id="sidebar" aria-label="Connector workspace pane">
+    <header class="pane-head clean-head">
+      <div class="head-title">
+        <svg class="head-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.8l1.9 2H18.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/></svg>
+        <button class="plain-title" id="vaultTitleBtn" type="button">Connector</button>
+      </div>
+      <button class="icon-btn" id="btnCollapseSidebar" type="button" aria-label="Collapse vault">
+        <svg viewBox="0 0 24 24"><path d="M8 4v16M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+      </button>
+    </header>
+    <div class="new-row" role="group" aria-label="Create items">
+      <input id="newName" type="text" autocomplete="off" data-i18n-placeholder="newPlaceholder" placeholder="New note, folder or task" />
+      <button class="icon-btn" id="btnNewNote"           type="button" aria-label="New note"    ><svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/></svg></button>
+      <button class="icon-btn" id="btnNewTask"           type="button" aria-label="New task"    ><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></button>
+      <button class="icon-btn" id="btnNewFolder"         type="button" aria-label="New folder"  ><svg viewBox="0 0 24 24"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.8l1.9 2H18.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/></svg></button>
+      <button class="icon-btn" id="btnNewCategoryInline" type="button" aria-label="New category"><svg viewBox="0 0 24 24"><path d="M20.6 13.2 13.2 20.6a2 2 0 0 1-2.8 0L3.4 13.6a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h7.2a2 2 0 0 1 1.4.6l7.2 7.2a2 2 0 0 1 0 2.4Z"/><circle cx="7.5" cy="7.5" r="1"/></svg></button>
+    </div>
+    <div class="search-row">
+      <input id="searchInput" type="search" autocomplete="off" data-i18n-placeholder="searchVault" placeholder="Search vault" />
+    </div>
+    <details class="vault-summary-panel" id="vaultSummaryPanel" open>
+      <summary><span data-i18n="workspaceSummary">Resumo do workspace</span></summary>
+      <div class="vault-summary" id="vaultSummary" aria-label="Resumo do vault"></div>
+      <div class="vault-summary-hint" id="vaultSummaryHint"></div>
+    </details>
+    <div class="tree-wrap" id="treeWrap">
+      <div class="root-drop" id="rootDrop" tabindex="0" aria-label="Root drop area">
+        <div id="tree" class="tree" role="tree"></div>
+        <section class="category-list" aria-label="Categories">
+          <div class="section-label" data-i18n="categories">Categories</div>
+          <div id="categoryList"></div>
+        </section>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Editor -->
+  <main class="editor pane" id="editor" aria-label="Editor pane">
+    <header class="pane-head">
+      <div class="head-title">
+        <svg class="head-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/></svg>
+        <span data-i18n="note">Note</span>
+      </div>
+      <div class="head-actions">
+        <button class="icon-btn" id="btnAddLinked" type="button" aria-label="Nova nota conectada"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="icon-btn close-editor-btn" id="btnCloseEditor" type="button" aria-label="Fechar editor"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+    </header>
+    <section class="note-shell" id="noteShell">
+      <div class="crumb" id="crumb">Ideas / Project</div>
+      <input class="title-input" id="titleInput" type="text" aria-label="Title" />
+      <div class="meta-row">
+        <label class="pill-select">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4.8l1.9 2H18.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/></svg>
+          <select id="folderSelect" aria-label="Folder"></select>
+        </label>
+        <label class="pill-select">
+          <span id="categoryColorDot" class="dot"></span>
+          <select id="categorySelect" aria-label="Category"></select>
+        </label>
+      </div>
+      <textarea id="bodyInput" class="body-input" aria-label="Body" spellcheck="true"></textarea>
+      <div class="task-row" id="taskEditorRow" hidden>
+        <label class="check"><input id="taskDone" type="checkbox" /> <span data-i18n="done">Done</span></label>
+        <label><span data-i18n="priority">Priority</span>
+          <select id="taskPriority">
+            <option value="low">Low</option>
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label><span data-i18n="date">Date</span><input id="taskDue" type="date" /></label>
+      </div>
+    </section>
+  </main>
+
+  <!-- Graph pane -->
+  <section class="graph-pane pane" id="graphPane" aria-label="Graph pane">
+    <header class="graph-toolbar" role="toolbar" aria-label="Graph toolbar">
+      <div class="toolbar-context" aria-hidden="true"><span data-i18n="graph">Grafo</span><strong>Connector</strong></div>
+      <div class="toolbar-actions">
+      <button class="icon-btn is-active" id="btnLabels"   type="button" aria-label="Toggle labels"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h14"/></svg></button>
+      <button class="icon-btn" id="btnLocalGraph"  type="button" aria-label="Local graph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg></button>
+      <button class="icon-btn" id="btnCenterGraph" type="button" aria-label="Center graph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      <button class="icon-btn" id="btnPause"       type="button" aria-label="Pause graph"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+      <button class="icon-btn" id="btnGraphFilters" type="button" aria-label="Filters" data-i18n-title="filters"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6.5 7.2V19l-3 1v-7.8z"/></svg></button>
+      <button class="icon-btn" id="btnHelpCommands" type="button" aria-label="Ajuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 0 1 4.6 1.1c0 1.7-2.4 2-2.4 3.8"/><path d="M12 17.2h.01"/></svg></button>
+      </div>
+    </header>
+    <div class="graph-filter-popover" id="graphFilterPopover" hidden>
+      <div class="graph-filter-head">
+        <strong data-i18n="filters">Filters</strong>
+        <button class="icon-btn" id="btnCloseGraphFilters" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <label class="graph-filter-field visually-hidden">
+        <span data-i18n="visibleFilter">Visible filter</span>
+        <select id="graphFilterSelect" aria-label="Graph filter">
+          <option value="all" data-i18n="filterAll">All</option>
+          <option value="people" data-i18n="filterPeople">People</option>
+          <option value="tasks" data-i18n="filterTasks">Tasks</option>
+          <option value="notes" data-i18n="filterNotes">Notes</option>
+          <option value="deliverables" data-i18n="filterDeliverables">Deliverables</option>
+          <option value="risks" data-i18n="filterRisks">Risks</option>
+          <option value="strong" data-i18n="filterStrong">Strong links</option>
+        </select>
+      </label>
+      <div class="graph-filter-summary" id="graphFilterSummary"></div>
+      <div class="graph-filter-chips" id="graphFilterChips" role="listbox" aria-label="Graph filters"></div>
+      <button class="graph-filter-reset" id="btnClearGraphFilter" type="button">Limpar filtro</button>
+      <p class="graph-filter-help" data-i18n="filtersHelp">Use filters to clean the graph without changing the vault data.</p>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap" tabindex="0" aria-label="Interactive graph canvas">
+      <aside class="graph-info-panel" id="graphInfoPanel" hidden>
+        <div class="graph-info-head"><span id="graphInfoTitle">Diagnostics</span><button class="icon-btn" id="btnCloseGraphInfo" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="graph-info-body" id="graphInfoBody"></div>
+      </aside>
+      <canvas id="graphCanvas"></canvas>
+      <div class="commands" id="commandsBox"></div>
+      <div class="stats" id="statsBox">
+        <span id="nodeCount">0 nodes</span>
+        <span id="linkCount">0 links</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="modalBackdrop" hidden></div>
+<aside class="settings-modal" id="settingsModal" aria-modal="true" role="dialog" aria-labelledby="settingsTitle" hidden>
+  <header class="modal-head">
+    <h2 id="settingsTitle" data-i18n="settings">Settings</h2>
+    <button class="icon-btn" id="btnCloseSettings" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </header>
+  <div class="modal-body">
+    <section class="setting-section">
+      <h3 data-i18n="appearance">Appearance</h3>
+      <div class="field"><label data-i18n="vaultName">Vault name</label><input id="settingVaultName" type="text" /></div>
+      <div class="field">
+        <label data-i18n="language">Language</label>
+        <select id="settingLanguage">
+          <option value="en">English</option>
+          <option value="pt-BR">Português (Brasil)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label data-i18n="theme">Theme</label>
+        <select id="settingTheme">
+          <option value="dark"   data-i18n="dark">Dark</option>
+          <option value="light"  data-i18n="light">Light</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="setting-section">
+      <h3 data-i18n="graphDisplay">Graph display</h3>
+      <label class="switch"><input id="settingGraphGroups" type="checkbox" /> <span data-i18n="showGraphGroups">Show graph groups</span></label>
+      <p class="setting-help" data-i18n="showGraphGroupsHelp">Shows soft circles around folder groups. Keep off for the classic clean graph view.</p>
+      <button class="smart-action" id="btnSmartLinksSettings" type="button" data-i18n="rebuildSmartLinks">Rebuild smart links</button>
+    </section>
+
+    <section class="setting-section">
+      <h3 data-i18n="physicsSettings">Physics</h3>
+      <div class="slider-row">
+        <label>
+          <span data-i18n="repulsion">Repulsion</span>
+          <input id="sliderRepulsion" type="range" min="1000" max="12000" step="100" />
+        </label>
+        <span class="slider-val" id="valRepulsion">4600</span>
+      </div>
+      <div class="slider-row">
+        <label>
+          <span data-i18n="springStiffness">Spring stiffness</span>
+          <input id="sliderStiffness" type="range" min="1" max="30" step="1" />
+        </label>
+        <span class="slider-val" id="valStiffness">7</span>
+      </div>
+      <div class="slider-row">
+        <label>
+          <span data-i18n="damping">Damping</span>
+          <input id="sliderDamping" type="range" min="50" max="97" step="1" />
+        </label>
+        <span class="slider-val" id="valDamping">82</span>
+      </div>
+      <div class="slider-row">
+        <label>
+          <span data-i18n="labelSize">Label size</span>
+          <input id="sliderLabelSize" type="range" min="9" max="20" step="1" />
+        </label>
+        <span class="slider-val" id="valLabelSize">13</span>
+      </div>
+      <button class="smart-action" id="btnResetPhysics" type="button" data-i18n="resetPhysics">Reset physics</button>
+    </section>
+
+    <section class="setting-section">
+      <h3 data-i18n="backup">Backup</h3>
+      <div class="backup-tools">
+        <div class="field compact-field">
+          <label for="importMode" data-i18n="importMode">Modo de importação</label>
+          <select id="importMode">
+            <option value="merge" data-i18n="importMerge">Mesclar com o workspace atual</option>
+            <option value="replace" data-i18n="importReplace">Substituir workspace atual</option>
+          </select>
+        </div>
+        <div class="button-grid backup-grid">
+          <button id="btnExportJson" type="button" data-i18n="exportJson">Exportar JSON</button>
+          <button id="btnExportPng" type="button" data-i18n="exportPngHd">Imagem HD</button>
+          <button id="btnImport" type="button" data-i18n="importJson">Importar JSON</button>
+        </div>
+        <p class="setting-help" data-i18n="backupHelp">JSON salva a estrutura do vault. A importação pode mesclar com o trabalho atual ou substituir tudo.</p>
+      </div>
+      <input id="fileInput" class="file-input" type="file" accept=".json,application/json" />
+    </section>
+
+    <section class="setting-section danger-zone">
+      <h3 data-i18n="dangerZone">Danger zone</h3>
+      <button id="btnResetSample" type="button" data-i18n="resetSample">Reset sample vault</button>
+    </section>
+  </div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+
+<script src="assets/js/app.js" defer></script>
+<script src="assets/js/pwa.js" defer></script>
+</body>
+</html>
